@@ -1,6 +1,9 @@
 {
   "name": "people-also-ask-scraper-serverr",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=14"
+  },
   "description": "",
   "main": "server.js",
   "scripts": {
