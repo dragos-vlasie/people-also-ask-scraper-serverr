@@ -1,4 +1,4 @@
-
+node_modules/
 node_modules/puppeteer-core/lib/cjs/puppeteer/cdp/Coverage.d.ts
 node_modules/yauzl/README.md
 node_modules/yauzl/package.json
