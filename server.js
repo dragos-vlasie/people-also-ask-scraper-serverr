@@ -1,57 +1,30 @@
-const express = require('express');
-const puppeteer = require('puppeteer-core');
-const chromium = require('chrome-aws-lambda');
-
+const express = require("express");
+const { scrapeLogic } = require("./scrapeLogic");
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.use(express.json());
+const PORT = process.env.PORT || 4000;
 
-app.post('/scrape', async (req, res) => {
-  try {
-    const { queries } = req.body;
+app.get("/scrape", (req, res) => {
+  const queriesParam = req.query.queries;
 
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath,
-      headless: true,
-    });
-
-    const page = await browser.newPage();
-
-    const results = {};
-
-    for (const query of queries) {
-      const searchURL = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-      await page.goto(searchURL);
-
-      const isSelectorPresent = await page.$('.related-question-pair');
-
-      if (isSelectorPresent) {
-        await page.waitForSelector('.related-question-pair');
-
-        const questions = await page.$$eval('.related-question-pair', (boxes) =>
-          boxes.map((box) => box.textContent)
-        );
-
-        results[query] = questions;
-      } else {
-        // If the selector is not present, provide a custom message
-        results[query] = [
-          "There are no 'People Also Ask Questions'. Please add more keywords or try another query.",
-        ];
-      }
-    }
-
-    await browser.close();
-
-    res.status(200).json(results);
-  } catch (error) {
-    console.error('Error in server:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+  if (!queriesParam) {
+    return res.send("Please provide valid queries in the 'queries' parameter.");
   }
+
+  const queries = queriesParam.split(',').map(query => decodeURIComponent(query.trim()));
+
+  if (queries.length === 0) {
+    return res.send("Please provide valid queries in the 'queries' parameter.");
+  }
+
+  scrapeLogic(res, queries);
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+
+app.get("/", (req, res) => {
+  res.send("Render Puppeteer server is up and running!");
+});
+
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
 });
